@@ -9,7 +9,7 @@
     "test": "jest",
     "eslint": "eslint ./src/**/*.{js,jsx} App.js --no-error-on-unmatched-pattern",
     "build": "webpack --mode production",
-    "test:e2e": "start npm run start-prod && npx cypress run"
+    "test:e2e": "start npm run start-prod & npx cypress run"
   },
   "repository": {
     "type": "git",
