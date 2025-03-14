@@ -1,11 +1,12 @@
-name: pipeline
+name: Deployment pipeline
+
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
 
 jobs:
   simple_deployment_pipeline:
@@ -15,32 +16,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-
       - name: Install dependencies
         run: npm install
-
       - name: Check style
         run: npm run eslint
-
       - name: Build the project
         run: npm run build
-
       - name: Run tests
         run: npm test
-
       - name: e2e tests
         uses: cypress-io/github-action@v5
         with:
           command: npm run test:e2e
           start: npm run start-prod
           wait-on: http://localhost:5000
-
       - name: Set up Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
-
       - name: Deploy to Fly.io and Health Check
         run: |
-          # Deploy to Fly.io
           flyctl deploy --remote-only
           if curl -fsS "https://full-stack-open-pokedex-cool-breeze-8404.fly.dev/health" | grep -q "ok"; then
             echo "Health check passed"
@@ -50,5 +43,19 @@ jobs:
           fi
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
+  tag_release:
+    needs: [simple_deployment_pipeline]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.64.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          DRY_RUN: true
+          tag_prefix: "v"
+          release_type: "patch"
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

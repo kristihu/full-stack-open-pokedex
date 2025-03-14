@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.static("dist"));
 app.get("/version", (req, res) => {
-  res.send("1"); // Change this number to verify new deployments
+  res.send("3"); // Change this number to verify new deployments
 });
 
 app.get("/health", (req, res) => {
