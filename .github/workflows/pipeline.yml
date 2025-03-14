@@ -1,5 +1,8 @@
 name: pipeline
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -37,8 +40,8 @@ jobs:
 
       - name: Deploy to Fly.io and Health Check
         run: |
+          # Deploy to Fly.io
           flyctl deploy --remote-only
-          APP_URL=$(flyctl status --json | jq -r .Hostname)
           if curl -fsS "https://full-stack-open-pokedex-cool-breeze-8404.fly.dev/health" | grep -q "ok"; then
             echo "Health check passed"
           else
@@ -47,3 +50,5 @@ jobs:
           fi
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
