@@ -35,12 +35,15 @@ jobs:
       - name: Set up Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only
+      - name: Deploy to Fly.io and Health Check
+        run: |
+          flyctl deploy --remote-only
+          APP_URL=$(flyctl status --json | jq -r .Hostname)
+          if curl -fsS "http://$APP_URL/health" | grep -q "ok"; then
+            echo "Health check passed"
+          else
+            echo "Health check failed"
+            exit 1
+          fi
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      - name: Health check after deploy
-        run: |
-
-          curl -f https://full-stack-open-pokedex-cool-breeze-8404.fly.dev/health || exit 1
