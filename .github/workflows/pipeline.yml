@@ -39,7 +39,7 @@ jobs:
         run: |
           flyctl deploy --remote-only
           APP_URL=$(flyctl status --json | jq -r .Hostname)
-          if curl -fsS "http://$APP_URL/health" | grep -q "ok"; then
+          if curl -fsS "https://full-stack-open-pokedex-cool-breeze-8404.fly.dev/health" | grep -q "ok"; then
             echo "Health check passed"
           else
             echo "Health check failed"
