@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  simple_deployment_pipeline:
+  pipeline:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,9 +15,15 @@ jobs:
           node-version: "20"
       - name: Install dependencies
         run: npm install
-      - name: Check style
+      - name: Lint code
         run: npm run eslint
-      - name: Build project
+      - name: Build
         run: npm run build
-      - name: Run tests
+      - name: Run unit tests
         run: npm test
+      - name: Run E2E tests
+        uses: cypress-io/github-action@v5
+        with:
+          command: npm run test:e2e
+          start: npm run start-prod
+          wait-on: http://localhost:5000
