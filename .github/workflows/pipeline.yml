@@ -59,3 +59,47 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: patch
+
+  notify_failure:
+    # run after the pipeline; runs only if the pipeline job failed
+    needs: [simple_deployment_pipeline]
+    runs-on: ubuntu-latest
+    if: ${{ needs.simple_deployment_pipeline.result == 'failure' }}
+    steps:
+      - name: Notify Discord - Failure
+        uses: rjstone/discord-webhook-notify@v2
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: error
+          title: "CI failed: ${{ github.repository }}@${{ github.sha }}"
+          description: |
+            The CI workflow **${{ github.workflow }}** failed.
+            Job: simple_deployment_pipeline
+          details: |
+            Repository: ${{ github.repository }}
+            Ref: ${{ github.ref }}
+            Actor: ${{ github.actor }}
+            Commit: ${{ github.sha }}
+            Commit messages:
+            ${{ join(github.event.commits.*.message || '', '\n') }}
+          # optional: add 'flags' to suppress notifications if you want
+          # flags: SuppressNotifications
+
+  notify_success:
+    # run after tagging job; only if tagging job succeeded
+    needs: [tag_release]
+    runs-on: ubuntu-latest
+    if: ${{ needs.tag_release.result == 'success' }}
+    steps:
+      - name: Notify Discord - Success
+        uses: rjstone/discord-webhook-notify@v2
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: info
+          title: "Deployment succeeded: ${{ github.repository }}"
+          description: "A new version has been deployed and tagged."
+          details: |
+            Repository: ${{ github.repository }}
+            Ref: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+            Link to commit: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
